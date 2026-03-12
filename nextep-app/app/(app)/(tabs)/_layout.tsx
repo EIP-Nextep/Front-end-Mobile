@@ -31,14 +31,14 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="schools"
         options={{
-          title: 'Écoles',
-          tabBarLabel: 'Écoles',
+          title: 'Parcours',
+          tabBarLabel: 'Parcours',
           tabBarIcon: ({ color }) => (
-            <TabBarIcon name="school" color={color} />
+            <TabBarIcon name="book-multiple-outline" color={color} />
           ),
         }}
       />
-      {/* <Tabs.Screen
+      <Tabs.Screen
         name="swipe"
         options={{
           title: 'Swipe',
@@ -47,7 +47,7 @@ export default function TabsLayout() {
             <TabBarIcon name="gesture-swipe-right" color={color} />
           ),
         }}
-      /> */}
+      />
       <Tabs.Screen
         name="messages"
         options={{
