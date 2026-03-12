@@ -1,5 +1,6 @@
 import { API_ENDPOINTS, initializeApi } from '@/config/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { matchingService } from './matching.service';
 
 export interface RegisterPayload {
   email: string;
@@ -79,7 +80,19 @@ class AuthService {
       
       const accessToken = data.accessToken || data.access_token;
       const refreshToken = data.refreshToken || data.refresh_token;
-      const user = data.user || { id: data.id || 'unknown', email: payload.email, fullName: payload.fullName };
+      
+      let userId = data.id || 'unknown';
+      if (accessToken && userId === 'unknown') {
+        try {
+          const decoded: any = JSON.parse(atob(accessToken.split('.')[1]));
+          userId = decoded.sub || decoded.id || 'unknown';
+          console.log('API: Extracted userId from token:', userId);
+        } catch (tokenError) {
+          console.error('API: Failed to extract user ID from token:', tokenError);
+        }
+      }
+      
+      const user = data.user || { id: userId, email: payload.email, fullName: payload.fullName };
       
       console.log("API: Processed tokens - accessToken:", !!accessToken, "refreshToken:", !!refreshToken);
 
@@ -116,6 +129,16 @@ class AuthService {
       
       const authResponse = await this.login(loginPayload);
       console.log('API: Auto-login successful after registration');
+      
+      if (authResponse.user.id) {
+        try {
+          await matchingService.createUserProfile(authResponse.user.id);
+          console.log('API: User profile created in matching service');
+        } catch (profileError) {
+          console.error('API: Failed to create user profile in matching service:', profileError);
+        }
+      }
+      
       return authResponse;
     } catch (error) {
       console.error('Register and login error:', error);
@@ -154,7 +177,19 @@ class AuthService {
       
       const accessToken = data.accessToken || data.access_token;
       const refreshToken = data.refreshToken || data.refresh_token;
-      const user = data.user || { id: 'unknown', email: payload.email, fullName: '' };
+      
+      let userId = 'unknown';
+      if (accessToken) {
+        try {
+          const decoded: any = JSON.parse(atob(accessToken.split('.')[1]));
+          userId = decoded.sub || decoded.id || 'unknown';
+          console.log('API: Extracted userId from token:', userId);
+        } catch (tokenError) {
+          console.error('API: Failed to extract user ID from token:', tokenError);
+        }
+      }
+      
+      const user = data.user || { id: userId, email: payload.email, fullName: '' };
       
       console.log("API: Processed tokens - accessToken:", !!accessToken, "refreshToken:", !!refreshToken);
 
@@ -171,6 +206,15 @@ class AuthService {
         refreshToken: refreshToken || '',
         user
       };
+      
+      if (user.id) {
+        try {
+          await matchingService.createUserProfile(user.id);
+          console.log('API: User profile created in matching service');
+        } catch (profileError) {
+          console.error('API: Failed to create user profile in matching service:', profileError);
+        }
+      }
       
       return formattedData;
     } catch (error) {
